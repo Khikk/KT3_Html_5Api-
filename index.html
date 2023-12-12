@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUDweb</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+
+        <span class="add-pet-btn" onclick="togglePetForm()">
+              add pet :3
+        </span>
+        
+    </div>
+    <div class="container">
+    <form id="petForm" class="hidden">
+        <label for="name">Имя:</label>
+        <input type="text" id="name" required><br>
+        <label for="age">Возраст:</label>
+        <input type="number" id="age" required><br>
+        <label for="description">Описание:</label><br>
+        <textarea id="description" rows="4" required></textarea><br>
+        <label for="photoUrl">Ссылка на фотографию:</label>
+        <input type="text" id="photoUrl"><br>
+        <button type="submit" class="btn">Добавить питомца</button>
+    </form>
+    </div>
+    <table id="petTable">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Возраст</th>
+                <th>Описание</th>
+                <th>Фотография</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody id="petList"></tbody>
+    </table>
+
+    <script>
+        const petForm = document.getElementById('petForm');
+        const petList = document.getElementById('petList');
+
+        function togglePetForm() {
+            const form = document.getElementById('petForm');
+            form.classList.toggle('hidden');
+        }
+
+
+        petForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const description = document.getElementById('description').value;
+            const photoUrl = document.getElementById('photoUrl').value;
+
+            if (name && age && description && photoUrl) {
+                addPet(name, age, description, photoUrl);
+                petForm.reset();
+                saveData();
+            }
+        });
+
+        function addPet(name, age, description, photoUrl) {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${name}</td>
+                <td>${age}</td>
+                <td>${description}</td>
+                <td><img src="${photoUrl}" alt="pet" width="100"></td>
+                <td>
+                    <button class="btn" onclick="editPet(this)">Изменить</button>
+                    <button class="btn" onclick="deletePet(this)">Удалить</button>
+                </td>
+            `;
+            petList.appendChild(newRow);
+        }
+
+        function editPet(button) {
+            const row = button.parentNode.parentNode;
+            const cells = row.getElementsByTagName('td');
+            const name = cells[0].innerText;
+            const age = cells[1].innerText;
+            const description = cells[2].innerText;
+            const photoUrl = cells[3].querySelector('img').src;
+
+            document.getElementById('name').value = name;
+            document.getElementById('age').value = age;
+            document.getElementById('description').value = description;
+            document.getElementById('photoUrl').value = photoUrl;
+
+            row.remove();
+            saveData();
+        }
+
+        function deletePet(button) {
+            const row = button.parentNode.parentNode;
+            row.remove();
+            saveData();
+        }
+
+        function saveData() {
+            const pets = [];
+            const rows = petList.querySelectorAll('tr');
+            rows.forEach(row => {
+                const columns = row.querySelectorAll('td');
+                const pet = {
+                    name: columns[0].innerText,
+                    age: columns[1].innerText,
+                    description: columns[2].innerText,
+                    photoUrl: columns[3].querySelector('img').src
+                };
+                pets.push(pet);
+            });
+            localStorage.setItem('pets', JSON.stringify(pets));
+        }
+
+        // Загрузка данных из LocalStorage при загрузке страницы
+        window.onload = function() {
+            const savedPets = JSON.parse(localStorage.getItem('pets'));
+            if (savedPets) {
+                savedPets.forEach(pet => {
+                    addPet(pet.name, pet.age, pet.description, pet.photoUrl);
+                });
+            }
+        };
+    </script>
+</body>
+</html>
